@@ -5,6 +5,8 @@ Ref : http://bi.snu.ac.kr/Publications/Conferences/Domestic/KIISE2013f_KMKim.pdf
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression
@@ -18,13 +20,24 @@ def get_fullpath(filename):
     return os.path.abspath(os.path.join(os.path.dirname(__file__), filename))
 
 def read_file():
-    return pd.read_csv(get_fullpath('balance-scale.data'), delimiter=',')
+    return pd.read_csv(get_fullpath('balance-scale.data'), delimiter=',',
+                       names=['class', 'lweight', 'ldist', 'rweight', 'rdist'])
 
 def analysis_data():
     df = read_file()
-    print 'Class L - ', df[df['B'] == 'L'].shape[0]
-    print 'Class B - ', df[df['B'] == 'B'].shape[0]
-    print 'Class R - ', df[df['B'] == 'R'].shape[0]
+    X_outlier = df[df['class'] == 'B'] # .ix[idx]
+    X_train = df[df['class'] == 'L']
+
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.scatter(X_outlier['lweight'], X_outlier['ldist'],
+               X_outlier['rweight'], c='r')
+    ax.scatter(X_train['lweight'], X_train['ldist'],
+               X_train['rweight'], c='b')
+    ax.set_xlabel('Mileage')
+    ax.set_ylabel('Transmission')
+    ax.set_zlabel('Price')
+    plt.show()
 
 def load_original_data():
     rawdata = read_file()
@@ -35,42 +48,42 @@ def load_original_data():
 
 def load_undersampling():
     rawdata = read_file()
-    n_sample = rawdata[rawdata['B'] == 'B'].shape[0]
-    B = rawdata[rawdata['B'] == 'B']
-    L = rawdata[rawdata['B'] == 'L'][:n_sample]
-    R = rawdata[rawdata['B'] == 'R'][:n_sample]
+    n_sample = rawdata[rawdata['class'] == 'B'].shape[0]
+    B = rawdata[rawdata['class'] == 'B']
+    L = rawdata[rawdata['class'] == 'L'][:n_sample]
+    R = rawdata[rawdata['class'] == 'R'][:n_sample]
     d = pd. concat([B, L, R])
     le = LabelEncoder()
     X = d.icol(range(1, 5)).values
-    y = le.fit_transform(d['B'].values)
+    y = le.fit_transform(d['class'].values)
     return X, y
 
 def load_sampling():
     size = 200
     rawdata = read_file()
-    n_sample = rawdata[rawdata['B'] == 'B'].shape[0]
+    n_sample = rawdata[rawdata['class'] == 'B'].shape[0]
     idx = np.random.randint(0, n_sample, size)
-    B = rawdata[rawdata['B'] == 'B'].iloc[idx]
+    B = rawdata[rawdata['class'] == 'B'].iloc[idx]
 
-    n_sample = rawdata[rawdata['B'] == 'L'].shape[0]
+    n_sample = rawdata[rawdata['class'] == 'L'].shape[0]
     idx = np.random.randint(0, n_sample, size)
-    L = rawdata[rawdata['B'] == 'L'].iloc[idx]
+    L = rawdata[rawdata['class'] == 'L'].iloc[idx]
 
-    n_sample = rawdata[rawdata['B'] == 'R'].shape[0]
+    n_sample = rawdata[rawdata['class'] == 'R'].shape[0]
     idx = np.random.randint(0, n_sample, size)
-    R = rawdata[rawdata['B'] == 'R'].iloc[idx]
+    R = rawdata[rawdata['class'] == 'R'].iloc[idx]
 
     df = pd.concat([B, L, R])
 
     le = LabelEncoder()
     X = df.icol(range(1, 5)).values
-    y = le.fit_transform(df['B'].values)
+    y = le.fit_transform(df['class'].values)
     return X, y
 
 def load_data_with_SMOTE():
     rawdata = read_file()
     size = 150
-    small = rawdata[rawdata['B'] == 'B']
+    small = rawdata[rawdata['class'] == 'B']
     n_sample = small.shape[0]
     idx = np.random.randint(0, n_sample, size)
     X = small.iloc[idx, range(1, 5)].values
@@ -84,13 +97,13 @@ def load_data_with_SMOTE():
     B = np.concatenate([np.transpose(y[np.newaxis]), X], axis=1)
     B = pd.DataFrame(B)
 
-    n_sample = rawdata[rawdata['B'] == 'L'].shape[0]
+    n_sample = rawdata[rawdata['class'] == 'L'].shape[0]
     idx = np.random.randint(0, n_sample, size)
-    L = rawdata[rawdata['B'] == 'L'].iloc[idx]
+    L = rawdata[rawdata['class'] == 'L'].iloc[idx]
 
-    n_sample = rawdata[rawdata['B'] == 'R'].shape[0]
+    n_sample = rawdata[rawdata['class'] == 'R'].shape[0]
     idx = np.random.randint(0, n_sample, size)
-    R = rawdata[rawdata['B'] == 'R'].iloc[idx]
+    R = rawdata[rawdata['class'] == 'R'].iloc[idx]
 
     d = np.concatenate([B.values, L.values, R.values])
 
