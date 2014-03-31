@@ -90,7 +90,7 @@ def load_data_with_SMOTE():
     y = small.iloc[idx, 0].values
     knn = NearestNeighbors(n_neighbors=2)
     knn.fit(X)
-    d, i = knn.kneighbors(X)
+    _d, i = knn.kneighbors(X)
     idx2 = i[:, 1]
     diff = X - X[idx2]
     X = X + np.random.random(4) * diff
